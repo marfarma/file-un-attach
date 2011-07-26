@@ -1,0 +1,10 @@
+FAQ
+
+1. Where can I change the settings?
+There are no settings; the plugin adds functionality to the media screens.
+
+2. When I stall the plugin I get the following error "unexpected T_CONST, expecting T_OLD_FUNCTION or T_FUNCTION or T_VAR or ‘}’"
+This is because your using PHP4 and this plugin only works with PHP5
+
+3. How can I make donation to continue the plugin development?
+here is the link https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8SJEQXK5NK4ES
