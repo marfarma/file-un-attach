@@ -12,6 +12,8 @@ This plugin will allow you to attach a single file to multiple posts, but will a
 
 This plugin will allow you to attach a single file to multiple posts, but will also will allow you to detach any file.
 
+* http://xparkmedia.com/plugins/file-un-attach/
+
 == Installation ==
 
 * Download the latest version of the plugin to your computer.
@@ -34,7 +36,7 @@ This plugin will allow you to attach a single file to multiple posts, but will a
 
 == Frequently Asked Questions ==
 
-* http://wordpress.org/tags/file-un-attach?forum_id=10#postform
+* http://xparkmedia.com/support/plugin/file-un-attach/
 
 == Changelog ==
 = 0.5.5 =
