@@ -9,21 +9,18 @@
 */
 
 //dont cache file
-header('Expires:0');
-header('Pragma:no-cache');
-header('Cache-control:private');
-header('Last-Modified:'.gmdate('D,d M Y H:i:s').' GMT');
-header('Cache-control:no-cache,no-store,must-revalidate,max-age=0');
+header( 'Last-Modified:'.gmdate( 'D,d M Y H:i:s').' GMT' );
+header( 'Cache-control:no-cache,no-store,must-revalidate,max-age=0' );
 
 //define constants
-define('WP_ADMIN',true);
-define('DOING_AJAX',true);
+define( 'WP_ADMIN',true);
+define( 'DOING_AJAX',true);
+$_SERVER['PHP_SELF'] = "/wp-admin/fun-ajax.php";
 
 //load wp
 require_once '../../../wp-load.php';
 
-//make sure that the request came from the same domain	
-if(stripos($_SERVER['HTTP_REFERER'],get_bloginfo('siteurl')) === false) 
+if( empty( $_REQUEST['action'] ) ) 
 	die();
 
 /**
@@ -65,7 +62,7 @@ function file_unattach_attach_this(){
  *@return void
  *@since 0.5.0
 */
-function file_unattach_find_posts(){
+function file_unattach_find_posts( ){
 	
 	check_ajax_referer("funajax");
 	if ( empty($_GET['ps']) ) exit;
@@ -90,18 +87,19 @@ function file_unattach_find_posts(){
 	if ( count($search_terms) > 1 && $search_terms[0] != $s )
 		$search .= " OR ($wpdb->posts.post_title LIKE '%{$term}%') OR ($wpdb->posts.post_content LIKE '%{$term}%')";
 	
+	$exclude = '';
 	if(!empty($_GET['exclude']))
 		$exclude = " AND $wpdb->posts.ID NOT IN (".trim($_GET['exclude'],',').") ";
 	
 	$posts = $wpdb->get_results( "SELECT ID, post_title, post_date, post_status FROM $wpdb->posts WHERE post_type = '$what' AND post_status IN ('draft', 'publish') AND ($search) $exclude ORDER BY post_date_gmt DESC LIMIT 50" );
 
 	if ( ! $posts ) {
-		$posttype = get_post_type_object($what);
+		$posttype = get_post_type_object( $what );
 		echo '<div class="fun-search-results">'.$posttype->labels->not_found.'</div>';
 		exit();
 	}
 	
-	$html = '<table class="widefat fun-search-results" cellspacing="0"><thead><tr><th class="found-radio"><br /></th><th>'.__('Title').'</th><th>'.__('Date').'</th><th>'.__('Status').'</th></tr></thead><tbody>';
+	$html = '<table class="widefat fun-search-results" cellspacing="0"><thead><tr><th class="found-radio">'.__('Attched',FileUnattach::domain).'</th><th>'.__('Title',FileUnattach::domain).'</th><th>'.__('Date',FileUnattach::domain).'</th><th>'.__('Status',FileUnattach::domain).'</th></tr></thead><tbody>';
 	foreach ( $posts as $post ) {
 
 		switch ( $post->post_status ) {
@@ -131,14 +129,17 @@ function file_unattach_find_posts(){
 		$html .= '<td><label for="found-'.$post->ID.'">'.esc_html( $post->post_title ).'</label></td><td>'.esc_html( $time ).'</td><td>'.esc_html( $stat ).'</td></tr>'."\n\n";
 	}
 	$html .= '</tbody></table>';
+	$html .= '<input name="fun-search" type="hidden" value="1" />';
 
 	$x = new WP_Ajax_Response();
 	$x->add( array(
 		'what' => $what,
-		'data' => $html
+		'data' => $html,
+		'action' => NULL
 	));
 	$x->send();
-
+	
+	die();
 }
 
 /**
@@ -165,7 +166,7 @@ function file_unattach_find_attached(){
 	);
 	
 	$postids = array();
-	$html = '<table class="widefat fun-files-attached" cellspacing="0"><thead><tr><th class="found-radio"><br /></th><th>'.__('Title').'</th><th>'.__('Date').'</th><th>'.__('Status').'</th></tr></thead><tbody>';
+	$html = '<table class="widefat fun-search-results" cellspacing="0"><thead><tr><th class="found-radio">'.__('Attached',FileUnattach::domain).'</th><th>'.__('Title',FileUnattach::domain).'</th><th>'.__('Date',FileUnattach::domain).'</th><th>'.__('Status',FileUnattach::domain).'</th></tr></thead><tbody>';
 	foreach ( $posts as $post ) {
 		$postids[] =  $post->ID;
 		switch ( $post->post_status ) {
@@ -196,16 +197,19 @@ function file_unattach_find_attached(){
 		$html .= '<td><label for="found-'.$post->ID.'"><a href="'.get_edit_post_link($post->ID).'">'.esc_html( $post->post_title ).'</a></label></td><td>'.esc_html( $time ).'</td><td>'.esc_html( $stat ).'</td></tr>'."\n\n";
 	}
 	$html .= '</tbody></table>';
-	$html .= '<input name="fun-current-attached" type="hidden" value="'.implode(',',$postids).'" />';
+	$html .= '<input name="fun-current-attached" type="hidden" value="'.implode( ',', $postids ).'" />';
 
 	$x = new WP_Ajax_Response();
 	$x->add( array(
-		'data' => $html
+		'data' => $html,
+		'action' => NULL
 	));
 	$x->send();
+	
+	die();
 }
 
-switch($_GET['action']){
+switch( $_GET['action'] ){
 	case 'attach':
 		file_unattach_attach_this();
 		break;
@@ -220,6 +224,5 @@ switch($_GET['action']){
 		break;
 	default: die();
 }
-
 
 ?>

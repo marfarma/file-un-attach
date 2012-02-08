@@ -1,5 +1,4 @@
 <?php 
-
 /**
 *File un-attach - admin settings
 *
@@ -77,14 +76,13 @@ class FunAdmin{
 		
 		global $post;
 		$attach = get_post_meta($id,"_fun-parent");
-		
 		if((empty($attach) && $post->post_parent) || (count($attach)==1 && $attach[0] == $post->post_parent) || count($attach)==1){
 			$parent = (count($attach)==1) ? $attach[0] : $post->post_parent;
 			$title =_draft_or_post_title( $parent );
 			echo '<strong><a href="'.get_edit_post_link($parent).'" >'.$title.'</a></strong><br />';
 			echo '<a href="#" id="attached-list-'.$id.'" class="attached-list">'.__('Attach',FileUnattach::domain).'</a><span> | </span>';
-			echo '<a href="#" class="fun-unattach-row" id="file-unattch-'.$post->ID.'">'.__('Unattach',FileUnattach::domain).'</a>';
-		}elseif(($attach && $post->post_parent) || (count($attach)>1)){
+			echo '<a href="#" class="fun-unattach-row" id="file-unattch-'.$post->ID.'">'.__('Detach',FileUnattach::domain).'</a>';
+		}elseif(( $attach && $post->post_parent ) || (count($attach)>1)){
 			echo '<strong><a href="#" id="attached-list-'.$id.'" class="attached-list">'
 			.__('Multiple',FileUnattach::domain).'</a></strong>';
 		}else{ 
@@ -104,23 +102,25 @@ class FunAdmin{
 	function attachment_fields($form_fields, $post){
 		
 		//[alx359] added. If in media libary, do not create attach/unattach buttons
-		if(empty($this->tab)) return $form_fields;
+		if(empty($this->tab)) 
+			return $form_fields;
 	
-		if($this->tab == 'gallery' || $this->tab == 'type' || (empty($this->tab)&&DOING_AJAX)){
-			$form_fields['menu_order'] = $this->image_sort[$post->ID];
+		if( $this->tab == 'gallery' || $this->tab == 'type' || (empty($this->tab) && DOING_AJAX)){
+			if( isset( $this->image_sort[$post->ID])) 
+				$form_fields['menu_order'] =  $this->image_sort[$post->ID];
 			$form_fields['funattach']  = array(
 				'input'	=> 'html',
-				'label'	=> __('Unattach'),
-				'html'	=> '<input type="button" name="unattach-'.$post->ID.'" value="'.__('Unattach',FileUnattach::domain).'" class="button funattach" />
-				<span class="fun-message hidden fun-mess-'.$post->ID.'">'.__(" Unattach this file?",FileUnattach::domain).'&nbsp;
+				'label'	=> __('Detach'),
+				'html'		=> '<input type="button" name="unattach-'.$post->ID.'" value="'.__('Detach',FileUnattach::domain).'" class="button funattach" />
+				<span class="fun-message hidden fun-mess-'.$post->ID.'">'.__(" Detach this file?",FileUnattach::domain).'&nbsp;
 				<a href="#" class="fun-yes" id="file-unattch-'.$post->ID.'">'.__('Yes',FileUnattach::domain).'</a>&nbsp; &#8226; &nbsp;  
 				<a href="#" class="fun-no">'.__('No',FileUnattach::domain).'</a></span><br />',
 			);
-		}elseif($this->tab == 'library' && !in_array($post->ID,$this->ids)){
+		}elseif( $this->tab == 'library' && !in_array( $post->ID, $this->ids )){
 			$form_fields['fileattach'] = array(
 				'input'	=> 'html',
-				'label'	=> __('Attach'),
-				'html'	=> '<input type="button" name="attach-'.$post->ID.'" value="'.__('Attach',FileUnattach::domain).'" class="button fileattach" />
+				'label'	=> __( 'Attach' ),
+				'html'		=> '<input type="button" name="attach-'.$post->ID.'" value="'.__('Attach',FileUnattach::domain).'" class="button fileattach" />
 				<span class="fun-message hidden fun-mess-'.$post->ID.'">'.__("File has been attached.",FileUnattach::domain).'</span><br />',
 			);
 		}
@@ -138,7 +138,7 @@ class FunAdmin{
 		wp_localize_script('fun-admin','funlocal',array(
 			'adminurl' => FUNATTACH_URL,
 			'nonceajax'	=> wp_create_nonce('funajax'),
-			'unattach' => __('Unattach',FileUnattach::domain),
+			'unattach' => __('Detach',FileUnattach::domain),
 		));
 	}
 	
@@ -152,7 +152,8 @@ class FunAdmin{
 	function pre_get_images(&$query){
 		global $pagenow;
 		
-		if($_GET['tab']	!= 'gallery' 
+		if( empty( $_GET['tab'] ) ||
+		$_GET['tab'] != 'gallery' 
 		|| $pagenow != 'media-upload.php'
 		|| empty($this->results)) 
 		return;
@@ -206,21 +207,25 @@ class FunAdmin{
 	*/
 	function init_actions(){ 
 		global $pagenow;
-		if($_GET['fun-find-posts-submit'] && $pagenow == 'upload.php'){
-			
+		
+		if( isset( $_GET['fun-find-posts-submit'] ) && $pagenow == 'upload.php' ){
 			$imageid = (int)$_GET['media'][0];
 
-			if(isset($_GET['found_post']) && is_array($_GET['found_post'])){
-				delete_post_meta($imageid, '_fun-parent');
-				foreach($_GET['found_post'] as $post_id)
-					add_post_meta($imageid,'_fun-parent',$post_id);
+			if( isset($_GET['found_post']) && is_array($_GET['found_post'])){
+				foreach( $_GET['found_post'] as $post_id  ){
+					delete_post_meta( $imageid, '_fun-parent', $post_id );
+					add_post_meta( $imageid, '_fun-parent', $post_id );
+				}
 			}
 			
 			$attached = explode(',',$_GET['fun-current-attached']);
-			foreach($attached as $id){
-				if(isset($_GET['found_post'][$id]) || !is_numeric($id)) continue;
-				delete_post_meta($imageid,'_fun-parent',$id);
-				wp_update_post(array('ID' =>$id, 'post_parent' => 0));
+			if( is_array( $attached ) && empty( $_GET['fun-search'] ) ){
+				foreach( $attached as $id ){
+					if( isset($_GET['found_post'][$id]) || !is_numeric($id)) 
+						continue;
+					delete_post_meta( $imageid, '_fun-parent', $id );
+					wp_update_post( array( 'ID' =>$id, 'post_parent' => 0 ));
+				}
 			}
 			
 			$parent = array_shift($_GET['found_post']);
@@ -229,7 +234,7 @@ class FunAdmin{
 			exit();
 		}
 		
-		$this->tab = $_GET['tab']; 
+		$this->tab = isset( $_GET['tab'] ) ? $_GET['tab'] : false;
 		if($this->tab == 'gallery'){
 			$this->post_id = (int)$_GET['post_id'];
 			$this->image_sort = (empty($_POST['attachments'])) ? 
@@ -275,12 +280,13 @@ class FunAdmin{
 				<label for="fun-find-posts-<?php echo esc_attr($post->name); ?>"><?php echo $post->label; ?></label>
 				<?php
 				} ?>
-			</div>
+			</div>	
 			<div id="fun-find-posts-response"></div>
 		</div>
 		<div class="find-box-buttons">
 			<input id="fun-find-posts-close" type="button" class="button alignleft" value="<?php esc_attr_e('Close'); ?>" />
-			<?php submit_button( __('Save',FileUnattach::domain), 'button-primary alignright', 'fun-find-posts-submit', false ); ?>
+			<input id="fun-find-posts-submit" name="fun-find-posts-submit" type="submit" class="button-primary alignright" value="<?php esc_attr_e('Save', FileUnattach::domain); ?>" />
+			<?php //submit_button( __('Save',FileUnattach::domain), 'button-primary alignright', 'fun-find-posts-submit', false ); ?>
 		</div>
 	</div>
 	</form>

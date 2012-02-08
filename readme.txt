@@ -1,10 +1,10 @@
 === File Un-Attach ===
 Contributors: Hax
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8SJEQXK5NK4ES
-Tags: image,gallery,attach,attached,unattach,unattached,file,files,un-attach,assign,remove,detach,attachments,multiple
-Requires at least: 3.1.0
-Tested up to: 3.2.1
-Stable tag: 0.5.1
+Tags: image,gallery,attach,attached,unattach,unattached,file,files,un-attach,assign,remove,detach,attachments,multiple,attachments,media,custom post type,post type
+Requires at least: 3.0.0
+Tested up to: 3.3.1
+Stable tag: 0.5.5
 
 This plugin will allow you to attach a single file to multiple posts, but will also will allow you to detach any file.
 
@@ -36,6 +36,13 @@ This plugin will allow you to attach a single file to multiple posts, but will a
 
 * http://wordpress.org/tags/file-un-attach?forum_id=10#postform
 
+== Changelog ==
+= 0.5.5 =
+* Code clean up 
+* Attach search improved
+* Custom post type support
+* Support for WP 3.0+
+* "fun_get_attachments" function added, thank you @sebmeric
 
 == Changelog ==
 = 0.5.1 =
