@@ -4,7 +4,7 @@ Plugin Name: File Un-Attach
 Plugin URI: http://www.xparkmedia.com
 Description: Attach multiple file to a post and unattch them also.
 Author: Hafid R. Trujillo Huizar
-Version: 0.5.1
+Version: 0.5.5
 Author URI: http://www.xparkmedia.com
 Requires at least: 3.1.0
 Tested up to: 3.2
