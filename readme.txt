@@ -1,7 +1,7 @@
 === File Un-Attach ===
 Contributors: Hax
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8SJEQXK5NK4ES
-Tags: image,gallery,attach,attached,unattach,unattached,file,files,un-attach,assign,remove,detach,attachments,multiple,attachments,media,custom post type,post type
+Tags: image,gallery,attach,attached,unattach,unattached,file,files,un-attach,assign,remove files,detach,attachments,multiple,attachments,media,custom post type,post type
 Requires at least: 3.0.0
 Tested up to: 3.3.1
 Stable tag: 0.5.5
