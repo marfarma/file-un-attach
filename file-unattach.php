@@ -4,10 +4,10 @@ Plugin Name: File Un-Attach
 Plugin URI: http://www.xparkmedia.com
 Description: Attach multiple file to a post and unattch them also.
 Author: Hafid R. Trujillo Huizar
-Version: 0.5.5
+Version: 0.6.0
 Author URI: http://www.xparkmedia.com
 Requires at least: 3.1.0
-Tested up to: 3.2
+Tested up to: 3.3.1
 
 Copyright 2010-2011 by Hafid Trujillo http://www.xparkmedia.com
 
@@ -41,8 +41,7 @@ class FileUnattach{
 	*Make sure that new language(.mo) files have 'fua-' as base name
 	*/
 	const domain	= 'fua';
-	const version	= '0.5.1';
-	
+	const version	= '0.6.0';
 	
 	/**
 	*Constructor
@@ -98,11 +97,8 @@ class FileUnattach{
 		
 }
 
-
-
 // Do that thing you do!!!
 global $FileUnattach;
 $FileUnattach = new FileUnattach();
-	
 }
 ?>
