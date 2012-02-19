@@ -39,6 +39,11 @@ This plugin will allow you to attach a single file to multiple posts, but will a
 * http://xparkmedia.com/support/plugin/file-un-attach/
 
 == Changelog ==
+= 0.6.0 =
+* Code clean up.
+* Fixed: Attached files not being displayed in media library.
+* Fixed: Attaching new file in media library will remove files already attached.
+
 = 0.5.5 =
 * Code clean up 
 * Attach search improved

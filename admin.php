@@ -218,20 +218,20 @@ class FunAdmin{
 				}
 			}
 			
-			$attached = explode(',',$_GET['fun-current-attached']);
-			if( is_array( $attached ) && empty( $_GET['fun-search'] ) ){
+			if( empty( $_GET['fun-search'] ) ){
+				$attached = explode(',',$_GET['fun-current-attached']);			
 				foreach( $attached as $id ){
-					if( isset($_GET['found_post'][$id]) || !is_numeric($id)) 
+					if( isset($_GET['found_post'][$id]) || !is_numeric($id) ) 
 						continue;
 					delete_post_meta( $imageid, '_fun-parent', $id );
-					wp_update_post( array( 'ID' =>$id, 'post_parent' => 0 ));
+					//wp_update_post( array( 'ID' =>$id, 'post_parent' => 0 ));
 				}
 			}
 			
 			$parent = array_shift($_GET['found_post']);
-			wp_update_post(array('ID' =>$imageid, 'post_parent' => $parent));
-			wp_redirect(admin_url($pagenow));
-			exit();
+			wp_update_post( array('ID' =>$imageid, 'post_parent' => $parent));
+			wp_redirect( admin_url($pagenow) . "#post-$imageid" );
+			exit( );
 		}
 		
 		$this->tab = isset( $_GET['tab'] ) ? $_GET['tab'] : false;

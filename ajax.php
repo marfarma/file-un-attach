@@ -93,9 +93,10 @@ function file_unattach_find_posts( ){
 	
 	$posts = $wpdb->get_results( "SELECT ID, post_title, post_date, post_status FROM $wpdb->posts WHERE post_type = '$what' AND post_status IN ('draft', 'publish') AND ($search) $exclude ORDER BY post_date_gmt DESC LIMIT 50" );
 
-	if ( ! $posts ) {
+	if ( !$posts ) {
 		$posttype = get_post_type_object( $what );
 		echo '<div class="fun-search-results">'.$posttype->labels->not_found.'</div>';
+		echo  '<input name="fun-search" type="hidden" value="1" />';
 		exit();
 	}
 	
@@ -160,7 +161,7 @@ function file_unattach_find_attached(){
 	$posts = $wpdb->get_results( " 
 		SELECT ID, post_title, post_status, post_date FROM $wpdb->posts WHERE $wpdb->posts.ID = 
 		( SELECT post_parent FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment' 
-			AND $wpdb->posts.ID = $postid ) OR $wpdb->posts.ID IN ( SELECT meta_value FROM ims_postmeta 
+			AND $wpdb->posts.ID = $postid ) OR $wpdb->posts.ID IN ( SELECT meta_value FROM $wpdb->postmeta 
 			WHERE $wpdb->postmeta.meta_key = '_fun-parent' AND $wpdb->postmeta.post_id = $postid 
 		)  ORDER BY post_date_gmt DESC LIMIT 50 "
 	);
@@ -224,5 +225,4 @@ switch( $_GET['action'] ){
 		break;
 	default: die();
 }
-
 ?>
