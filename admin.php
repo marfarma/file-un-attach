@@ -21,7 +21,7 @@ class FunAdmin{
 	*@return void
 	*@since 0.5.0 
 	*/
-	function __construct(){
+	function __construct( ){
 		
 		add_filter('attachment_fields_to_edit',array(&$this,'attachment_fields'),10,2);
 		
@@ -45,8 +45,7 @@ class FunAdmin{
 	*@since 0.5.0
 	*/
 	function load_admin_styles(){
-		global $current_screen;
-
+		//global $current_screen;
 	}
 	
 	/**
@@ -76,13 +75,14 @@ class FunAdmin{
 		
 		global $post;
 		$attach = get_post_meta($id,"_fun-parent");
-		if((empty($attach) && $post->post_parent) || (count($attach)==1 && $attach[0] == $post->post_parent) || count($attach)==1){
+		if( ( empty($attach) && $post->post_parent ) || ( count( $attach ) ==1 && empty( $post->post_parent  ) )
+			|| ( count( $attach ) ==1 && $attach[0] == $post->post_parent ) ){
 			$parent = (count($attach)==1) ? $attach[0] : $post->post_parent;
 			$title =_draft_or_post_title( $parent );
 			echo '<strong><a href="'.get_edit_post_link($parent).'" >'.$title.'</a></strong><br />';
 			echo '<a href="#" id="attached-list-'.$id.'" class="attached-list">'.__('Attach',FileUnattach::domain).'</a><span> | </span>';
 			echo '<a href="#" class="fun-unattach-row" id="file-unattch-'.$post->ID.'">'.__('Detach',FileUnattach::domain).'</a>';
-		}elseif(( $attach && $post->post_parent ) || (count($attach)>1)){
+		}elseif( ( $attach && $post->post_parent ) || (count($attach)>1)){
 			echo '<strong><a href="#" id="attached-list-'.$id.'" class="attached-list">'
 			.__('Multiple',FileUnattach::domain).'</a></strong>';
 		}else{ 

@@ -3,8 +3,8 @@ Contributors: Hax
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8SJEQXK5NK4ES
 Tags: image,gallery,attach,attached,unattach,unattached,file,files,un-attach,assign,remove files,detach,attachments,multiple,attachments,media,custom post type,post type
 Requires at least: 3.0.0
-Tested up to: 3.3.1
-Stable tag: 0.6.0
+Tested up to: 3.4.0
+Stable tag: 0.6.5
 
 This plugin will allow you to attach a single file to multiple posts, but will also will allow you to detach any file.
 
@@ -39,6 +39,13 @@ This plugin will allow you to attach a single file to multiple posts, but will a
 * http://xparkmedia.com/support/plugin/file-un-attach/
 
 == Changelog ==
+= 0.6.5 =
+* Code clean up.
+* Added: 3.4.0 support
+* Added: Spanish language translation.
+* Added: Full support for get_post, get_children, wp_query.
+* Fixed: typo
+
 = 0.6.0 =
 * Code clean up.
 * Fixed: Attached files not being displayed in media library.

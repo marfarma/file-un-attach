@@ -4,10 +4,10 @@ Plugin Name: File Un-Attach
 Plugin URI: http://www.xparkmedia.com
 Description: Attach multiple file to a post and unattch them also.
 Author: Hafid R. Trujillo Huizar
-Version: 0.6.0
+Version: 0.6.5
 Author URI: http://www.xparkmedia.com
 Requires at least: 3.1.0
-Tested up to: 3.3.1
+Tested up to: 3.4.0
 
 Copyright 2010-2011 by Hafid Trujillo http://www.xparkmedia.com
 
@@ -40,8 +40,8 @@ class FileUnattach{
 	*@param $domain plugin Gallery IDentifier
 	*Make sure that new language(.mo) files have 'fua-' as base name
 	*/
-	const domain	= 'fua';
-	const version	= '0.6.0';
+	const domain	= 'fun';
+	const version	= '0.6.5';
 	
 	/**
 	*Constructor
@@ -76,10 +76,12 @@ class FileUnattach{
 	*@since 0.5.0 
 	*/
 	function load_text_domain(){
-		if(function_exists('load_plugin_textdomain')){
-			$plugin_dir = basename(dirname(__FILE__)).'/langs';
-			load_plugin_textdomain(FileUnattach::domain,WP_CONTENT_DIR.'/plugins/'.$plugin_dir,$plugin_dir);
-		}
+		$locale 	= get_locale( );
+		$filedir 	= WP_CONTENT_DIR . '/languages/_fun/'. FileUnattach::domain . '-' . $locale . '.mo';
+		if( function_exists( 'load_plugin_textdomain' ) )
+			load_plugin_textdomain( FileUnattach::domain, false, '../languages/_fun/' );
+		elseif( function_exists( 'load_textdomain' ) )
+			load_textdomain( $this->domain,  $filedir );
 	}
 	
 	/**

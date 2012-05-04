@@ -17,7 +17,7 @@ class FunFront{
 	*@since 0.5.0 
 	*/
 	function __construct(){
-		add_action('pre_get_posts',array(&$this,'pre_get_images'),50);
+		add_action( 'pre_get_posts', array(&$this,'pre_get_images'),50 );
 	}
 	
 	/**
@@ -27,30 +27,31 @@ class FunFront{
 	*@return void
 	*@since 0.5.0
 	*/
-	function pre_get_images(&$query){
-		if(!is_singular()) return;
+	function pre_get_images( &$query ){
 		
-		global $wpdb, $post;
-		if( isset( $query->query_vars['post_status'] ) &&
-		$query->query_vars['post_status'] == 'inherit' && 
-		$query->query_vars['post_parent'] == $post->ID && 
-		$query->query_vars['suppress_filters'] == 1){
+		$q = $query->query_vars;
+		if( isset( $q['post_status'] ) && $q['post_status'] == 'inherit' && 
+			isset( $q['post_parent'] ) &&  $q['post_type'] == 'attachment' &&
+			isset( $q['post_mime_type'] ) && $q['post_mime_type'] != '' &&
+			$q['suppress_filters'] == 1 ){
 			
-			$results = $wpdb->get_results(
-				"SELECT ID FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment'
-				AND post_parent = $post->ID OR $wpdb->posts.ID IN( 
-					SELECT post_id FROM $wpdb->postmeta 
-					WHERE $wpdb->postmeta.meta_key = '_fun-parent'
-					AND $wpdb->postmeta.meta_value = $post->ID
-				)"
+			global $wpdb; 
+			$results = $wpdb->get_results( 
+				$wpdb->prepare(
+					"SELECT ID FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment'
+					AND post_parent = %d OR $wpdb->posts.ID IN( 
+						SELECT post_id FROM $wpdb->postmeta 
+						WHERE $wpdb->postmeta.meta_key = '_fun-parent' 
+						AND $wpdb->postmeta.meta_value = %d 
+					" , $q['post_parent'],  $q['post_parent'] ) . 
+				wp_post_mime_type_where( $q['post_mime_type'], $wpdb->posts ) . ") "
 			);
-		
-			if(empty($results)) return;
-			foreach($results as $obj) $ids[] = $obj->ID;
 			
-			$query->query_vars['include'] = $ids;
-			$query->query_vars['post__in'] = $ids;
-			unset($query->query_vars['post_parent']);
+			if( empty( $results ) ) return;
+				
+			foreach($results as $obj ) 
+				$query->query_vars['post__in'][] = $obj->ID;
+			unset( $query->query_vars['post_parent'] );
 		}
 	}
 }

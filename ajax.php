@@ -100,7 +100,7 @@ function file_unattach_find_posts( ){
 		exit();
 	}
 	
-	$html = '<table class="widefat fun-search-results" cellspacing="0"><thead><tr><th class="found-radio">'.__('Attched',FileUnattach::domain).'</th><th>'.__('Title',FileUnattach::domain).'</th><th>'.__('Date',FileUnattach::domain).'</th><th>'.__('Status',FileUnattach::domain).'</th></tr></thead><tbody>';
+	$html = '<table class="widefat fun-search-results" cellspacing="0"><thead><tr><th class="found-radio">'.__('Attached',FileUnattach::domain).'</th><th>'.__('Title',FileUnattach::domain).'</th><th>'.__('Date',FileUnattach::domain).'</th><th>'.__('Status',FileUnattach::domain).'</th></tr></thead><tbody>';
 	foreach ( $posts as $post ) {
 
 		switch ( $post->post_status ) {
