@@ -29,9 +29,11 @@ class FunFront{
 	*/
 	function pre_get_images( &$query ){
 		
+		do_action( 'fun_pre_get_images' );
+		
 		$q = $query->query_vars;
 		if( isset( $q['post_status'] ) && $q['post_status'] == 'inherit' && 
-			isset( $q['post_parent'] ) &&  $q['post_type'] == 'attachment' &&
+			isset( $q['post_parent'] ) && $q['post_type'] == 'attachment' &&
 			isset( $q['post_mime_type'] ) && $q['post_mime_type'] != '' &&
 			$q['suppress_filters'] == 1 ){
 			
@@ -43,7 +45,7 @@ class FunFront{
 						SELECT post_id FROM $wpdb->postmeta 
 						WHERE $wpdb->postmeta.meta_key = '_fun-parent' 
 						AND $wpdb->postmeta.meta_value = %d 
-					" , $q['post_parent'],  $q['post_parent'] ) . 
+					" , $q['post_parent'], $q['post_parent'] ) . 
 				wp_post_mime_type_where( $q['post_mime_type'], $wpdb->posts ) . ") "
 			);
 			
@@ -56,6 +58,7 @@ class FunFront{
 	}
 }
 $this->admin = new FunFront( );
+
 
 /*
 * Get post attachments 

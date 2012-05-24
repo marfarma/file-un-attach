@@ -4,7 +4,7 @@ Plugin Name: File Un-Attach
 Plugin URI: http://www.xparkmedia.com
 Description: Attach multiple file to a post and unattch them also.
 Author: Hafid R. Trujillo Huizar
-Version: 0.6.5
+Version: 1.0.0
 Author URI: http://www.xparkmedia.com
 Requires at least: 3.1.0
 Tested up to: 3.4.0
@@ -28,9 +28,9 @@ Foundation,Inc.,51 Franklin St,Fifth Floor,Boston,MA 02110-1301 USA
 
 
 // Stop direct access of the file
-if(preg_match('#'.basename(__FILE__).'#',$_SERVER['PHP_SELF'])) die();
+if(preg_match( '#'.basename(__FILE__) . '#',$_SERVER['PHP_SELF'])) die();
 	
-if(!class_exists('FileUnattach')){
+if(!class_exists( 'FileUnattach')){
 
 class FileUnattach{
 	
@@ -40,8 +40,8 @@ class FileUnattach{
 	*@param $domain plugin Gallery IDentifier
 	*Make sure that new language(.mo) files have 'fua-' as base name
 	*/
-	const domain	= 'fun';
-	const version	= '0.6.5';
+	var $domain	= 'fun';
+	var $version	= '1.0.0';
 	
 	/**
 	*Constructor
@@ -63,10 +63,10 @@ class FileUnattach{
 	*/
 	function define_constant(){
 		ob_start(); //fix redirection problems
-		define('FUNATTACH_FILE_NAME',plugin_basename(__FILE__));
-		define('FUNATTACH_FOLDER',plugin_basename(dirname(__FILE__)));
-		define('FUNATTACH_ABSPATH',str_replace("\\","/",dirname(__FILE__)));
-		define('FUNATTACH_URL',WP_PLUGIN_URL."/".FUNATTACH_FOLDER."/");
+		define( 'FUNATTACH_FILE_NAME',plugin_basename(__FILE__));
+		define( 'FUNATTACH_FOLDER',plugin_basename(dirname(__FILE__)));
+		define( 'FUNATTACH_ABSPATH',str_replace("\\","/",dirname(__FILE__)));
+		define( 'FUNATTACH_URL',WP_PLUGIN_URL."/".FUNATTACH_FOLDER."/");
 	}
 	
 	/**
@@ -77,11 +77,11 @@ class FileUnattach{
 	*/
 	function load_text_domain(){
 		$locale 	= get_locale( );
-		$filedir 	= WP_CONTENT_DIR . '/languages/_fun/'. FileUnattach::domain . '-' . $locale . '.mo';
+		$filedir 	= WP_CONTENT_DIR . '/languages/_fun/'. $this->domain . '-' . $locale . '.mo';
 		if( function_exists( 'load_plugin_textdomain' ) )
-			load_plugin_textdomain( FileUnattach::domain, false, '../languages/_fun/' );
+			load_plugin_textdomain( $this->domain , false, '../languages/_fun/' );
 		elseif( function_exists( 'load_textdomain' ) )
-			load_textdomain( $this->domain,  $filedir );
+			load_textdomain( $this->domain, $filedir );
 	}
 	
 	/**
@@ -90,11 +90,11 @@ class FileUnattach{
 	*@return void
 	*@since 0.5.0 
 	*/
-	function load_dependencies(){
-		if(is_admin() && !class_exists('FunAdmin'))
-			require_once(dirname(__FILE__).'/admin.php');
-		elseif(!is_admin() && !class_exists('FunFront'))
-			require_once(dirname(__FILE__).'/front.php');
+	function load_dependencies( ){
+		if( is_admin() && !class_exists( 'FunAdmin' ))
+			require_once( FUNATTACH_ABSPATH . '/admin.php');
+		elseif( !is_admin() && !class_exists( 'FunFront'))
+			require_once( FUNATTACH_ABSPATH . '/front.php');
 	}
 		
 }
