@@ -16,7 +16,7 @@ class FunFront{
 	*@return void
 	*@since 0.5.0 
 	*/
-	function __construct(){
+	function __construct( ){
 		add_action( 'pre_get_posts', array(&$this,'pre_get_images'),50 );
 	}
 	
@@ -29,31 +29,47 @@ class FunFront{
 	*/
 	function pre_get_images( &$query ){
 		
-		do_action( 'fun_pre_get_images' );
 		
-		$q = $query->query_vars;
-		if( isset( $q['post_status'] ) && $q['post_status'] == 'inherit' && 
-			isset( $q['post_parent'] ) && $q['post_type'] == 'attachment' &&
-			isset( $q['post_mime_type'] ) && $q['post_mime_type'] != '' &&
-			$q['suppress_filters'] == 1 ){
+		if( empty( $query->query_vars['post_status'] ) 
+			||  empty( $query->query_vars['post_parent'] )
+			|| empty( $query->query_vars['post_mime_type'] ) 
+			|| empty( $query->query_vars['suppress_filters'] )  ) 
+		return;
+		
+	
+		
+		if( $query->query_vars['post_status'] == 'inherit' 
+			&& $query->query_vars['post_type'] == 'attachment' 
+			&& $query->query_vars['post_mime_type'] != '' 
+			&& $query->query_vars['suppress_filters'] == 1 ){
 			
-			global $wpdb; 
-			$results = $wpdb->get_results( 
-				$wpdb->prepare(
-					"SELECT ID FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment'
-					AND post_parent = %d OR $wpdb->posts.ID IN( 
-						SELECT post_id FROM $wpdb->postmeta 
-						WHERE $wpdb->postmeta.meta_key = '_fun-parent' 
-						AND $wpdb->postmeta.meta_value = %d 
-					" , $q['post_parent'], $q['post_parent'] ) . 
-				wp_post_mime_type_where( $q['post_mime_type'], $wpdb->posts ) . ") "
-			);
+			do_action( 'fun_pre_get_images' );
+			
+			$results = wp_cache_get( 'fun_attachments_' . $query->query_vars['post_parent'] );
+			
+			if( false == $results ){
+				
+				global $wpdb; 
+				$results = $wpdb->get_results( 
+					$wpdb->prepare(
+						"SELECT ID FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment'
+						AND post_parent = %d OR $wpdb->posts.ID IN( 
+							SELECT post_id FROM $wpdb->postmeta 
+							WHERE $wpdb->postmeta.meta_key = '_fun-parent' 
+							AND $wpdb->postmeta.meta_value = %d 
+						" , $query->query_vars['post_parent'], $query->query_vars['post_parent'] ) . 
+					wp_post_mime_type_where( $q['post_mime_type'], $wpdb->posts ) . ") "
+				);
+				
+				wp_cache_set( 'fun_attachments_' . $query->query_vars['post_parent'],  $results );
+			}
 			
 			if( empty( $results ) ) return;
-				
+			
 			foreach($results as $obj ) 
 				$query->query_vars['post__in'][] = $obj->ID;
 			unset( $query->query_vars['post_parent'] );
+			
 		}
 	}
 }
