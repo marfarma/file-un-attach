@@ -69,7 +69,6 @@ This plugin will allow you to attach a single file to multiple posts, but will a
 * Support for WP 3.0+
 * "fun_get_attachments" function added, thank you @sebmeric
 
-== Changelog ==
 = 0.5.1 =
 * Removed attach/unattach button from media library
 
