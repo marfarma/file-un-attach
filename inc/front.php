@@ -41,35 +41,33 @@ class FunFront {
 				&& $query->query_vars['post_mime_type'] != ''
 				&& $query->query_vars['suppress_filters'] == 1) {
 
-			//print_r( $query );
+			do_action( 'fun_pre_get_images' );
 
-			do_action('fun_pre_get_images');
+			$results = wp_cache_get( 'fun_attachments_' . $query->query_vars['post_parent'] );
 
-			$results = wp_cache_get('fun_attachments_' . $query->query_vars['post_parent']);
-
-			if (false == $results) {
+			if ( false == $results) {
 
 				global $wpdb;
 				$results = $wpdb->get_results(
 						$wpdb->prepare(
-								"SELECT ID FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment'
-						AND post_parent = %d OR $wpdb->posts.ID IN( 
+							"SELECT ID FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment'
+							AND post_parent = %d OR $wpdb->posts.ID IN( 
 							SELECT post_id FROM $wpdb->postmeta 
 							WHERE $wpdb->postmeta.meta_key = '_fun-parent' 
 							AND $wpdb->postmeta.meta_value = %d 
 						", $query->query_vars['post_parent'], $query->query_vars['post_parent']) .
-						wp_post_mime_type_where($query->query_vars['post_mime_type'], $wpdb->posts) . ") "
+						wp_post_mime_type_where( $query->query_vars['post_mime_type'], $wpdb->posts ) . ") "
 				);
 
-				wp_cache_set('fun_attachments_' . $query->query_vars['post_parent'], $results);
+				wp_cache_set( 'fun_attachments_' . $query->query_vars['post_parent'], $results );
 			}
 
 			if (empty($results))
 				return;
 
-			foreach ($results as $obj)
+			foreach ( $results as $obj )
 				$query->query_vars['post__in'][] = $obj->ID;
-			unset($query->query_vars['post_parent']);
+			unset( $query->query_vars['post_parent'] );
 		}
 	}
 
@@ -99,19 +97,19 @@ if (!function_exists('fun_get_attachments')) {
 			'meta_value' => '',
 		);
 
-		$args = wp_parse_args($args, $defaults);
+		$args = wp_parse_args( $args, $defaults );
 
-		if (!$args['post_parent'])
+		if ( !$args['post_parent'] )
 			$args['post_parent'] = $post->ID;
 
-		if (!$args['post_parent'])
-			return array();
+		if ( !$args['post_parent'] )
+			return array( );
 
 		// usual way to get pdf attached to this post
-		$legal_attachments = get_children($args);
+		$legal_attachments = get_children( $args );
 
 		// FileUnattach way to get attachments
-		if (class_exists('FileUnattach')) {
+		if ( class_exists( 'FileUnattach' ) ) {
 			$args['meta_key'] = '_fun-parent';
 			$args['meta_value'] = $args['post_parent'];
 			$args['post_parent'] = '';
@@ -119,7 +117,7 @@ if (!function_exists('fun_get_attachments')) {
 			$fun_attachments = get_posts($args);
 		}
 
-		$attachments = array_merge($legal_attachments, $fun_attachments);
+		$attachments = array_merge( $legal_attachments, $fun_attachments );
 
 		// if there are elts in both arrays, then there must be some duplicates.
 		// remove those duplicates !

@@ -69,7 +69,7 @@ class FunAdmin {
 	 */
 	function attachment_submitbox( ){
 		echo '<div class="fun-attach misc-pub-section"><label>' . __( 'Attached to:', 'fun' ) . '</label> ';
-			$this->attached_link( );
+		echo apply_filters( 'fun_attachment_submitbox',  $this->attached_link( ), false );
 		echo '</div>';
 	}
 
@@ -100,26 +100,30 @@ class FunAdmin {
 		if( !$postid ) $postid = $post->ID;
 		$attach = get_post_meta( $postid, "_fun-parent" );
 		
-		if ( ( empty( $attach ) && $post->post_parent ) || ( count( $attach ) == 1 && empty( $post->post_parent ) )
-				|| ( count( $attach ) == 1 && $attach[0] == $post->post_parent ) ) {
+		$link = '';
+		if ( ( empty( $attach ) && $post->post_parent ) || ( count( $attach ) == 1 
+			&& ( empty( $post->post_parent ) ||  $attach[0] == $post->post_parent ) )
+			|| ( count( $attach ) == 1 && $attach[0] == $post->post_parent ) ) {
 
 			$parent = ( count( $attach ) == 1 ) ? $attach[0] : $post->post_parent;
 			$title = _draft_or_post_title( $parent );
 			
-			echo '<strong><a href="' . get_edit_post_link( $parent ) . '" >' . $title . '</a></strong><br />';
-			echo '<a href="#" id="attached-list-' . $postid . '" class="attached-list">' . __( 'Attach', 'fun' ) . '</a><span> | </span>';
-			echo '<a href="#" class="fun-unattach-row" id="file-unattch-' . $postid . '">' . __( 'Detach', 'fun' ) . '</a>';
+			$link .= '<strong><a href="' . esc_attr( get_edit_post_link( $parent ) ) . '" >' . esc_html( $title ) . '</a></strong><br />';
+			$link .=  '<a href="#" id="attached-list-' . esc_attr( $postid ) . '" class="attached-list">' . __( 'Attach', 'fun' ) . '</a><span> | </span>';
+			$link .=  '<a href="#" class="fun-unattach-row" id="file-unattch-' . esc_attr( $postid ) . '">' . __( 'Detach', 'fun' ) . '</a>';
 			
 		} elseif ( ( $attach && $post->post_parent ) || ( count( $attach ) > 1 ) ) {
 
-			echo '<strong><a href="#" id="attached-list-' . $postid . '" class="attached-list">'
+			$link .=  '<strong><a href="#" id="attached-list-' . $postid . '" class="attached-list">'
 			. __( 'Multiple', 'fun' ) . '</a></strong>';
 			
 		} else {
 
-			echo __( '( Unattached )', 'fun' ) . "<br />\n";
-			echo '<a href="#" id="fun-find-posts-' . $postid . '" class="fun-find-posts">' . __( 'Attach', 'fun' ) . '</a>';
+			$link .=  __( '( Unattached )', 'fun' ) . "<br />\n";
+			$link .=  '<a href="#" id="fun-find-posts-' . esc_attr( $postid ) . '" class="fun-find-posts">' . __( 'Attach', 'fun' ) . '</a>';
 		}
+		
+		return $link;
 	}
 
 	/**
@@ -134,7 +138,7 @@ class FunAdmin {
 		if ( $column_name != 'fun-attach' )
 			return;
 
-		$this->attached_link( $id );
+		echo apply_filters( 'fun_attachment_submitbox',  $this->attached_link( $id ), $id );
 		do_action( 'fun_custom_column', $column_name, $id );
 	}
 
@@ -159,9 +163,9 @@ class FunAdmin {
 			$form_fields['funattach'] = array( 
 				'input' => 'html',
 				'label' => __( 'Detach' ),
-				'html' => '<input type="button" id="unattach-' . $image->ID . '" value="' . __( 'Detach', 'fun' ) . '" class="button funattach" />
-				<span class="fun-message hidden fun-mess-' . $image->ID . '">' . __( " Detach this file?", 'fun' ) . '&nbsp;
-				<a href="#" class="fun-yes" id="file-unattch-' . $image->ID . '">' . __( 'Yes', 'fun' ) . '</a>&nbsp; &#8226; &nbsp; 
+				'html' => '<input type="button" id="unattach-' . esc_attr( $image->ID ) . '" value="' . __( 'Detach', 'fun' ) . '" class="button funattach" />
+				<span class="fun-message hidden fun-mess-' .esc_attr(  $image->ID ) . '">' . __( " Detach this file?", 'fun' ) . '&nbsp;
+				<a href="#" class="fun-yes" id="file-unattch-' . esc_attr( $image->ID ) . '">' . __( 'Yes', 'fun' ) . '</a>&nbsp; &#8226; &nbsp; 
 				<a href="#" class="fun-no">' . __( 'No', 'fun' ) . '</a></span><br />',
 			 );
 			 
@@ -169,8 +173,8 @@ class FunAdmin {
 			$form_fields['fileattach'] = array( 
 				'input' => 'html',
 				'label' => __( 'Attach' ),
-				'html' => '<input type="button" id="attach-' . $image->ID . '" value="' . __( 'Attach', 'fun' ) . '" class="button fileattach" />
-				<span class="fun-message hidden fun-mess-' . $image->ID . '">' . __( "File has been attached.", 'fun' ) . '</span><br />',
+				'html' => '<input type="button" id="attach-' . esc_attr( $image->ID ) . '" value="' . __( 'Attach', 'fun' ) . '" class="button fileattach" />
+				<span class="fun-message hidden fun-mess-' . esc_attr( $image->ID ) . '">' . __( "File has been attached.", 'fun' ) . '</span><br />',
 			 );
 		}
 		
@@ -236,7 +240,7 @@ class FunAdmin {
 
 		$postid = ( int ) $_GET['post_id'];
 		$this->results = $wpdb->get_results( 
-				"SELECT ID FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment'
+			"SELECT ID FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment'
 			AND post_parent = $postid OR $wpdb->posts.ID IN( 
 				SELECT post_id FROM $wpdb->postmeta 
 				WHERE $wpdb->postmeta.meta_key = '_fun-parent'
@@ -252,7 +256,7 @@ class FunAdmin {
 		//insert and re-arrenge tabs
 		$lib = $tabs['library'];
 		unset( $tabs['library'] );
-		$tabs['gallery'] = sprintf( __( 'Gallery ( %s )', 'fun' ), "<span id='attachments-count'>" . count( $this->results ) . "</span>" );
+		$tabs['gallery'] = sprintf( __( 'Gallery ( %s )', 'fun' ), "<span id='attachments-count'>" . esc_attr( count( $this->results ) ) . "</span>" );
 		$tabs['library'] = $lib;
 
 		return $tabs;
@@ -267,18 +271,18 @@ class FunAdmin {
 	function init_actions( ) {
 		global $pagenow;
 		
-		if( isset( $_GET['post'] ) && $postid = ( int ) $_GET['post']  )
+		if( isset( $_REQUEST['post'] ) && $postid = ( int ) $_REQUEST['post']  )
 			$post = get_post( $postid );
 		
-		if ( isset( $_GET['fun-find-posts-submit'] ) && ( $pagenow == 'upload.php' 
+		if ( isset( $_REQUEST['fun-find-posts-submit'] ) && ( $pagenow == 'upload.php' 
 			||  isset( $post->post_type ) && $post->post_type == 'attachment' ) ) {
 				
-			$imageid = ( int ) $_GET['media'][0];
+			$imageid = ( isset( $_GET['media'][0] ) ) ? ( int ) $_GET['media'][0] :  false ;
 
 			do_action( 'fun_before_saving_attachment', $imageid );
 
 			if ( isset( $_GET['found_post'] ) && is_array( $_GET['found_post'] ) ) {
-				foreach ( $_GET['found_post'] as $post_id ) {
+				foreach ( $_GET['found_post'] as $post_id ){
 					delete_post_meta( $imageid, '_fun-parent', $post_id );
 					add_post_meta( $imageid, '_fun-parent', $post_id );
 				}
@@ -292,9 +296,9 @@ class FunAdmin {
 					delete_post_meta( $imageid, '_fun-parent', $id );
 				}
 			}
-
-			$parent = array_shift( $_GET['found_post'] );
-			wp_update_post( array( 'ID' => $imageid, 'post_parent' => $parent ) );
+			
+			//$parent = isset( $_GET['found_post'] ) ?  array_shift( $_GET['found_post'] ) : false;
+			//wp_update_post( array( 'ID' => $imageid, 'post_parent' => $parent ) );
 			
 			if( isset( $_GET['post'] ) && isset( $_GET['action'] ) )
 				$pagenow .= '?post=' . $_GET['post'] . '&action='.$_GET['action'];

@@ -9,6 +9,8 @@
  */
 
 //dont cache file
+header("Robots: none");
+header( 'X-Content-Type-Options: nosniff' );
 header( 'Last-Modified:' . gmdate( 'D,d M Y H:i:s' ) . ' GMT' );
 header( 'Cache-control:no-cache,no-store,must-revalidate,max-age=0' );
 
@@ -33,9 +35,15 @@ if ( empty( $_REQUEST['action'] ) )
 function file_unattach_unattach_this( ) {
 	check_ajax_referer( "funajax" );
 
-	$postid = ( int ) $_GET['postid'];
-	$imageid = ( int ) $_GET['imageid'];
+	$postid = isset( $_GET['postid'] ) ? ( int ) $_GET['postid'] : false;
+	$imageid = isset( $_GET['imageid'] ) ?  ( int ) $_GET['imageid'] : false;
 
+	if( !$imageid )
+		return;
+	
+	if( $postid == $imageid )
+		$postid = 0;
+		
 	delete_post_meta( $imageid, '_fun-parent', $postid );
 	wp_update_post( array( 'ID' => $imageid, 'post_parent' => 0 ) );
 }
@@ -75,6 +83,8 @@ function file_unattach_find_posts( ) {
 	global $wpdb;
 	
 	$post_types = get_post_types( array( 'public' => true ), 'objects' );
+	
+	unset( $post_types['ims_image'] );
 	unset( $post_types['attachment'] );
 	
 	$s = stripslashes( $_GET['ps'] );
@@ -98,10 +108,11 @@ function file_unattach_find_posts( ) {
 
 	$postids = array( );
 	$html = '<table class="widefat fun-search-results" cellspacing="0"><thead>
-	<tr><th class="found-radio">' . __( 'Attached', 'fun' ) . '</th>
-	<th>' . __( 'Title', 'fun' ) . '</th>
-	<th>' . __( 'Date', 'fun' ) . '</th>
-	<th>' . __( 'Status', 'fun' ) . '</th></tr></thead><tbody>';
+	<tr><th class="found-radio">' . esc_attr__( 'Attached', 'fun' ) . '</th>
+	<th>' . esc_attr__( 'Title', 'fun' ) . '</th>
+	<th>' . esc_attr__( 'Date', 'fun' ) . '</th>
+	<th>' . esc_attr__( 'Type', 'fun' ) . '</th>
+	<th>' . esc_attr__( 'Status', 'fun' ) . '</th></tr></thead><tbody>';
 
 	foreach ( $posts as $post ) {
 
@@ -126,15 +137,17 @@ function file_unattach_find_posts( ) {
 		}
 
 		$time = ( '0000-00-00 00:00:00' == $post->post_date )  ?  '' : mysql2date( __( 'Y/m/d' ), $post->post_date );
-
-		$html .= '<tr class="found-posts"><td class="found-radio">
-			<input type="checkbox" id="fun-found-' . $post->ID . '" name="found_post[' . $post->ID . ']" value="' . esc_attr( $post->ID ) . '"></td>';
-		$html .= '<td><label for="found-' . $post->ID . '">' . esc_html( $post->post_title ) . '</label></td>
-			<td>' . esc_html( $time ) . '</td><td>' . esc_html( $stat ) . '</td></tr>' . "\n\n";
+		
+		$html .= '<tr class="found-posts">';
+		$html .= '<td class="found-radio"><input type="checkbox" id="fun-found-' . ( int ) $post->ID . '" name="found_post[' . ( int ) $post->ID . ']" value="' . esc_attr( $post->ID ) . '"></td>';
+		$html .= '<td><label for="found-' . ( int ) $post->ID . '"><a href="' . esc_url( get_edit_post_link( $post->ID ) ). '">' . esc_html( $post->post_title ) . '</a></label></td>';
+		
+		$html .= '<td>' . esc_html( $time ) . '</td><td>' . esc_html( $post->post_type ) . '</td><td>' . esc_html( $stat ) . '</td>';
+		$html .= '</tr>' . "\n\n";
 	}
 	
 	$html .= '</tbody></table>';
-	$html .= '<input name="fun-current-attached" type="hidden" value="' . implode( ',', $postids ) . '" />';
+	$html .= '<input name="fun-search" type="hidden" value="1" />';
 
 	$x = new WP_Ajax_Response( );
 	$x->add( array( 
@@ -164,23 +177,29 @@ function file_unattach_is_attached( ){
 	$postid = ( int ) $_GET['postid'];
 	$imageid = ( int ) $_GET['img'];
 	
-	$posts = $wpdb->get_results( " 
-		SELECT ID FROM $wpdb->posts WHERE $wpdb->posts.ID = 
-		( SELECT post_parent FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment' 
-			AND $wpdb->posts.ID = $imageid ) OR $wpdb->posts.ID IN ( SELECT meta_value FROM $wpdb->postmeta 
-			WHERE $wpdb->postmeta.meta_key = '_fun-parent' AND $wpdb->postmeta.post_id = $imageid
-			 AND $wpdb->postmeta.meta_value = $postid
-		 ) ORDER BY post_date_gmt DESC LIMIT 50 "
-	 );
+	$posts = $wpdb->get_results( 
+		$wpdb->prepare( 
+			" SELECT ID FROM $wpdb->posts WHERE $wpdb->posts.ID IN (
+				SELECT post_parent FROM $wpdb->posts 
+				WHERE $wpdb->posts.post_type = 'attachment' 
+				AND $wpdb->posts.ID = %d
+			) OR $wpdb->posts.ID IN ( 
+				SELECT meta_value FROM $wpdb->postmeta 
+				WHERE $wpdb->postmeta.meta_key = '_fun-parent' 
+				AND $wpdb->postmeta.post_id = $imageid
+				AND $wpdb->postmeta.meta_value = %d
+			) ORDER BY post_date_gmt DESC "
+		, $postid, $postid  )
+	);
 	 	 
 	if( !empty( $posts ) ){
-		echo '<a class="funattach" id="unattach-' . $imageid . '" href="#" style="display:block">' . __( 'Detach', 'fun' ) . '</a>';
-		echo '<span class="fun-message hidden fun-mess-' . $imageid . '">' . __( " Detach this file?", 'fun' ) . '&nbsp;';
-		echo '<a class="fun-yes" href="#" id="file-unattch-'. $imageid . '">' . __( 'Yes', 'fun' ) . '</a> &nbsp;';
-		echo '<a class="fun-no" href="#" >' . __( 'No', 'fun' ) . '</a></span>';
+		echo '<a class="funattach" id="unattach-' . $imageid . '" href="#" style="display:block">' . esc_html( __( 'Detach', 'fun' ) ). '</a>';
+		echo '<span class="fun-message hidden fun-mess-' . $imageid . '">' . esc_html( __( " Detach this file?", 'fun' ) ) . '&nbsp;';
+		echo '<a class="fun-yes" href="#" id="file-unattch-'. $imageid . '">' . esc_html( __( 'Yes', 'fun' ) ) . '</a> &nbsp;';
+		echo '<a class="fun-no" href="#" >' . esc_html( __( 'No', 'fun' ) ) . '</a></span>';
 	}else{
 		echo '<a class="fileattach" id="attach-' . $imageid . '" href="#" style="display:block">' . __( 'Attach', 'fun' ) . '</a>';
-		echo '<span class="fun-message hidden fun-mess-' . $imageid . '">' . __( "File has been attached", 'fun' ) . '</span>';
+		echo '<span class="fun-message hidden fun-mess-' . $imageid . '">' . esc_html( __( "File has been attached", 'fun' ) ) . '</span>';
 	}
 }
 
@@ -201,22 +220,34 @@ function file_unattach_find_attached( ) {
 	global $wpdb;
 
 	$postid = ( int ) $_GET['img'];
+	$post_types = get_post_types( array( 'public' => true ), 'objects' );
 	
-	$posts = $wpdb->get_results( " 
-		SELECT ID, post_title, post_status, post_date FROM $wpdb->posts WHERE $wpdb->posts.ID = 
-		( SELECT post_parent FROM $wpdb->posts WHERE $wpdb->posts.post_type = 'attachment' 
-			AND $wpdb->posts.ID = $postid ) OR $wpdb->posts.ID IN ( SELECT meta_value FROM $wpdb->postmeta 
-			WHERE $wpdb->postmeta.meta_key = '_fun-parent' AND $wpdb->postmeta.post_id = $postid 
-		 ) ORDER BY post_date_gmt DESC LIMIT 50 "
+	unset( $post_types['ims_image'] );
+	unset( $post_types['attachment'] );
+	
+	$posts = $wpdb->get_results(
+		$wpdb->prepare( 
+			"SELECT ID, post_title, post_type, post_status, post_date
+			 FROM $wpdb->posts WHERE $wpdb->posts.ID IN ( 
+			 	SELECT post_parent FROM $wpdb->posts 
+				WHERE $wpdb->posts.post_type = 'attachment' 
+				AND $wpdb->posts.ID = %d
+			 ) OR $wpdb->posts.ID IN (
+			 	SELECT meta_value FROM $wpdb->postmeta 
+				WHERE $wpdb->postmeta.meta_key = '_fun-parent' 
+				AND $wpdb->postmeta.post_id = %d
+			) ORDER BY post_date_gmt DESC LIMIT 50 "
+		, $postid, $postid ) 
 	 );
 
 	$postids = array( );
 
 	$html = '<table class="widefat fun-search-results" cellspacing="0"><thead>
-	<tr><th class="found-radio">' . __( 'Attached', 'fun' ) . '</th>
-	<th>' . __( 'Title', 'fun' ) . '</th>
-	<th>' . __( 'Date', 'fun' ) . '</th>
-	<th>' . __( 'Status', 'fun' ) . '</th></tr>
+	<tr><th class="found-radio">' . esc_attr__( 'Attached', 'fun' ) . '</th>
+	<th>' . esc_attr__( 'Title', 'fun' ) . '</th>
+	<th>' . esc_attr__( 'Date', 'fun' ) . '</th>
+	<th>' . esc_attr__( 'Type', 'fun' ) . '</th>
+	<th>' . esc_attr__( 'Status', 'fun' ) . '</th></tr>
 	</thead><tbody>';
 
 	foreach ( $posts as $post ) {
@@ -247,11 +278,15 @@ function file_unattach_find_attached( ) {
 			$time = mysql2date( __( 'Y/m/d' ), $post->post_date );
 		}
 
-		$html .= '<tr class="found-posts"><td class="found-radio"><input type="checkbox" checked="checked" id="fun-found-' . $post->ID . '" name="found_post[' . $post->ID . ']" value="' . esc_attr( $post->ID ) . '"></td>';
-		$html .= '<td><label for="found-' . $post->ID . '"><a href="' . get_edit_post_link( $post->ID ) . '">' . esc_html( $post->post_title ) . '</a></label></td><td>' . esc_html( $time ) . '</td><td>' . esc_html( $stat ) . '</td></tr>' . "\n\n";
+		$html .= '<tr class="found-posts">';
+		$html .= '<td class="found-radio"><input type="checkbox" checked="checked" id="fun-found-' . ( int ) $post->ID . '" name="found_post[' . ( int ) $post->ID . ']" value="' . esc_attr( $post->ID ) . '"></td>';
+		$html .= '<td><label for="found-' . ( int ) $post->ID . '"><a href="' . esc_url( get_edit_post_link( $post->ID ) ). '">' . esc_html( $post->post_title ) . '</a></label></td>';
+		
+		$html .= '<td>' . esc_html( $time ) . '</td><td>' . esc_html( $post->post_type ) . '</td><td>' . esc_html( $stat ) . '</td>';
+		$html .= '</tr>' . "\n\n";
 	}
 	$html .= '</tbody></table>';
-	$html .= '<input name="fun-current-attached" type="hidden" value="' . implode( ',', $postids ) . '" />';
+	$html .= '<input name="fun-current-attached" type="hidden" value="' . esc_attr( implode( ',', $postids ) ) . '" />';
 
 	$x = new WP_Ajax_Response( );
 	$x->add( array( 

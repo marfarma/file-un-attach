@@ -5,7 +5,7 @@
 	Plugin URI: http://www.xparkmedia.com
 	Description: Attach multiple file to a post and unattch them also.
 	Author: Hafid R. Trujillo Huizar
-	Version: 1.0.5
+	Version: 1.0.6
 	Author URI: http://www.xparkmedia.com
 	Requires at least: 3.1.0
 	Tested up to: 3.5.0
@@ -85,14 +85,9 @@ if ( !class_exists( 'FileUnattach' ) ) {
 				return;
 			
 			$filedir = WP_CONTENT_DIR . '/languages/_fun/' . 'fun' . '-' . $this->locale . '.mo';
-			if ( !file_exists( $filedir ) && is_admin() && current_user_can( 'activate_plugins' ) ) {
-				$time = get_option ( '_fun_no_lan_file' );
-				if ( $time + ( 86400 * 2 ) <= current_time( 'timestamp' ) )
-					$this->download_language_file( $filedir );
-			}
 			
 			if (function_exists( 'load_plugin_textdomain' ) )
-				load_plugin_textdomain( 'fun', false, apply_filters('fun_load_textdomain', '../languages/_fun/', 'fun', $this->locale ));
+				load_plugin_textdomain( 'fun', false, apply_filters ('fun_load_textdomain', '../languages/_fun/', 'fun', $this->locale ) );
 			elseif ( function_exists( 'load_textdomain' ) )
 				load_textdomain( 'ims', apply_filters( 'fun_load_textdomain', $filedir, 'ims', $this->locale  ) );
 		}
@@ -104,32 +99,8 @@ if ( !class_exists( 'FileUnattach' ) ) {
 		 * @since 3.0.1
 		 */
 		function download_language_file( $filedir ) {
-			
-			add_option( '_fun_no_lan_file', current_time( 'timestamp' ) );
-			$data = @file_get_contents( "https://xparkmedia.com/xm/wp-content/languages/fun-" . $this->locale . ".zip" );
-			
-			if ( empty( $data ) )
-				return;
-	
-			if ( !file_exists( $path = dirname( $filedir ) ) )
-				@mkdir( $path, 0755, true);
-			
-			if( !is_writable( $path ) )
-				return;
-				
-			$temp = $path . '/temp.zip';
-			@file_put_contents( $temp, $data );
-	
-			include_once( ABSPATH . 'wp-admin/includes/class-pclzip.php' );
-			$PclZip = new PclZip( $temp );
-	
-			if ( false == ( $archive = $PclZip->extract( PCLZIP_OPT_EXTRACT_AS_STRING ) ) )
-				return;
-			
-			foreach ( $archive as $file )
-				@file_put_contents($path . "/" . $file['filename'], $file['content']);
-	
-			@unlink($temp);
+			 _deprecated_function( __FUNCTION__, '1.0.6' );
+			return;
 		}
 
 		/**
